@@ -81,6 +81,41 @@ http://localhost:5000/api
 }
 ```
 
+### Forgot Password
+
+- **URL:** `/auth/forgot-password`
+- **Method:** `POST`
+- **Content-Type:** `application/json`
+- **Request Body:**
+
+```json
+{
+  "email": "string"
+}
+```
+
+- **Success Response:**
+  - **Code:** 200
+  - **Content:** `{ "success": true, "message": "Reset token generated" }`
+
+### Reset Password
+
+- **URL:** `/auth/reset-password`
+- **Method:** `POST`
+- **Content-Type:** `application/json`
+- **Request Body:**
+
+```json
+{
+  "token": "string",
+  "password": "string"
+}
+```
+
+- **Success Response:**
+  - **Code:** 200
+  - **Content:** `{ "success": true, "message": "Password reset successful" }`
+
 ### Get User Profile
 
 - **URL:** `/auth/profile`

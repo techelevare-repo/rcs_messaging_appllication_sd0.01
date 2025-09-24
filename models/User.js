@@ -91,6 +91,12 @@ const userSchema = new mongoose.Schema({
   }
 });
 
+// Password reset fields
+userSchema.add({
+  resetPasswordToken: { type: String, default: null },
+  resetPasswordExpires: { type: Date, default: null }
+});
+
 // Add any instance methods here
 userSchema.methods.toPublicJSON = function () {
   const user = this.toObject();

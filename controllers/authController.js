@@ -196,6 +196,67 @@ class AuthController {
         }
     }
 
+    // Request password reset
+    async forgotPassword(req, res) {
+        try {
+            const { email } = req.body;
+            if (!email) {
+                return res.status(400).json({ success: false, message: 'Email is required' });
+            }
+
+            const user = await User.findOne({ email });
+            if (!user) {
+                // Respond success to avoid user enumeration
+                return res.json({ success: true, message: 'If the email exists, reset instructions were sent' });
+            }
+
+            const crypto = require('crypto');
+            const token = crypto.randomBytes(32).toString('hex');
+            const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000);
+
+            user.resetPasswordToken = token;
+            user.resetPasswordExpires = oneHourFromNow;
+            await user.save();
+
+            // In production, send email. For now, return token for development
+            res.json({ success: true, message: 'Reset token generated', token });
+        } catch (error) {
+            console.error('Forgot password error:', error);
+            res.status(500).json({ success: false, message: 'Error requesting password reset', error: error.message });
+        }
+    }
+
+    // Reset password
+    async resetPassword(req, res) {
+        try {
+            const { token, password } = req.body;
+            if (!token || !password) {
+                return res.status(400).json({ success: false, message: 'Token and new password are required' });
+            }
+
+            const user = await User.findOne({
+                resetPasswordToken: token,
+                resetPasswordExpires: { $gt: new Date() }
+            });
+
+            if (!user) {
+                return res.status(400).json({ success: false, message: 'Invalid or expired token' });
+            }
+
+            const bcrypt = require('bcryptjs');
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(password, salt);
+            user.resetPasswordToken = null;
+            user.resetPasswordExpires = null;
+            await user.save();
+
+            res.json({ success: true, message: 'Password reset successful' });
+        } catch (error) {
+            console.error('Reset password error:', error);
+            res.status(500).json({ success: false, message: 'Error resetting password', error: error.message });
+        }
+    }
+
     // Get patients for a doctor
     async getPatients(req, res) {
         try {
