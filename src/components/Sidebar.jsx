@@ -9,6 +9,7 @@ import {
   IconButton,
   useMediaQuery,
   useTheme,
+  Divider,
 } from '@mui/material';
 import {
   Dashboard,
@@ -18,17 +19,39 @@ import {
   Settings,
   Biotech,
   Menu as MenuIcon,
+  Login,
+  PersonAdd,
+  AdminPanelSettings,
+  Logout,
+  People
 } from '@mui/icons-material';
-import { Link, useLocation } from 'react-router-dom';
+import UserProfile from './UserProfile';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 const drawerWidth = 240;
 
 export default function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+
+  const handleLogin = () => {
+    navigate('/login');
+  };
+
+  const handleRegister = () => {
+    navigate('/register');
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const navigationItems = [
     { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
@@ -38,6 +61,16 @@ export default function Sidebar() {
     { text: 'Settings', icon: <Settings />, path: '/settings' },
     { text: 'Developer Space', icon: <Biotech />, path: '/developer' },
   ];
+
+  // Add admin navigation item if user is admin
+  if (isAuthenticated && user?.role === 'admin') {
+    navigationItems.push({ text: 'Admin Panel', icon: <AdminPanelSettings />, path: '/admin' });
+  }
+
+  // Add doctor patient management if user is doctor
+  if (isAuthenticated && user?.role === 'doctor') {
+    navigationItems.push({ text: 'Patient Management', icon: <People />, path: '/doctor-patients' });
+  }
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -61,7 +94,9 @@ export default function Sidebar() {
         </Typography>
       </Box>
 
-      <List sx={{ py: 2 }}>
+      <UserProfile />
+
+      <List sx={{ py: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
         {navigationItems.map((item) => (
           <ListItemButton
             key={item.text}
@@ -96,32 +131,85 @@ export default function Sidebar() {
             />
           </ListItemButton>
         ))}
-      </List>
+        <Box sx={{ flexGrow: 1 }} />
+        <Divider sx={{ my: 2 }} />
 
-      <Box sx={{ mt: 'auto' }}>
-        <Link to="/login" style={{ textDecoration: 'none' }}>
+        {isAuthenticated ? (
           <ListItemButton
+            onClick={handleLogout}
             sx={{
               mx: 2,
               mb: 2,
               borderRadius: 2,
-              backgroundColor: 'primary.main',
+              backgroundColor: 'error.main',
               color: 'white',
               '&:hover': {
-                backgroundColor: 'primary.dark',
+                backgroundColor: 'error.dark',
+                '& .MuiListItemIcon-root': { color: 'white' },
               },
             }}
           >
+            <ListItemIcon sx={{ color: 'white' }}>
+              <Logout />
+            </ListItemIcon>
             <ListItemText
-              primary="Login"
-              primaryTypographyProps={{
-                fontWeight: 600,
-                textAlign: 'center',
-              }}
+              primary="Logout"
+              primaryTypographyProps={{ fontWeight: 600 }}
             />
           </ListItemButton>
-        </Link>
-      </Box>
+        ) : (
+          <>
+            <ListItemButton
+              onClick={handleLogin}
+              sx={{
+                mx: 2,
+                mb: 1,
+                borderRadius: 2,
+                backgroundColor: 'primary.main',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: 'primary.dark',
+                  '& .MuiListItemIcon-root': { color: 'white' },
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: 'white' }}>
+                <Login />
+              </ListItemIcon>
+              <ListItemText
+                primary="Login"
+                primaryTypographyProps={{ fontWeight: 600 }}
+              />
+            </ListItemButton>
+
+            <ListItemButton
+              onClick={handleRegister}
+              sx={{
+                mx: 2,
+                mb: 2,
+                borderRadius: 2,
+                border: '2px solid',
+                borderColor: 'primary.main',
+                color: 'primary.main',
+                '&:hover': {
+                  backgroundColor: 'primary.light',
+                  color: 'white',
+                  '& .MuiListItemIcon-root': { color: 'white' },
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: 'primary.main' }}>
+                <PersonAdd />
+              </ListItemIcon>
+              <ListItemText
+                primary="Register"
+                primaryTypographyProps={{ fontWeight: 600 }}
+              />
+            </ListItemButton>
+          </>
+        )}
+      </List>
+
     </>
   );
 
@@ -139,7 +227,8 @@ export default function Sidebar() {
             position: 'fixed',
             top: 10,
             left: 10,
-            zIndex: 1200,
+            // Ensure it stays above the AppBar which is set to zIndex drawer + 1
+            zIndex: (theme) => theme.zIndex.appBar + 1,
             bgcolor: 'background.paper',
             '&:hover': { bgcolor: 'action.hover' },
           }}

@@ -1,54 +1,52 @@
-import { useState } from 'react'
-import { Box, Button, Typography, LinearProgress } from '@mui/material'
-import axios from 'axios'
-import { useNavigate } from 'react-router-dom'
+import React, { useState } from 'react';
+import axios from 'axios';
 
 export default function UploadForm() {
-  const [file, setFile] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
+  const [file, setFile] = useState(null);
+  const [message, setMessage] = useState('');
 
   const handleFileChange = (e) => {
-    setFile(e.target.files)
-  }
+    setFile(e.target.files[0]);
+  };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!file) return
-    setLoading(true)
-    const formData = new FormData()
-    formData.append('xray', file)
-
-    // Replace the URL with your backend API endpoint
+  const handleUpload = async () => {
     try {
-      const res = await axios.post('/api/predict', formData)
-      const { prediction, gradcam_url, confidence } = res.data
-      navigate('/results', { state: { prediction, gradcam_url, confidence } })
-    } catch (err) {
-      alert('Upload failed. Please try again!')
-    } finally {
-      setLoading(false)
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setMessage('No token found. Please login first.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('xray', file);
+
+      console.log('Starting upload test...');
+      console.log('File:', file.name);
+      
+      const response = await axios.post('http://localhost:5000/api/predict', formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.log('Upload response:', response.data);
+      setMessage('Upload successful: ' + JSON.stringify(response.data, null, 2));
+    } catch (error) {
+      console.error('Upload failed:', error);
+      setMessage('Error: ' + (error.response?.data?.message || error.message));
     }
-  }
+  };
 
   return (
-    <Box sx={{ p: 3, bgcolor: 'white', borderRadius: 2, boxShadow: 1 }}>
-      <Typography variant="h6" gutterBottom>
-        Upload Chest X-ray
-      </Typography>
-      <form onSubmit={handleSubmit}>
-        <input
-          accept="image/*"
-          type="file"
-          style={{ display: 'block', marginBottom: 16 }}
-          onChange={handleFileChange}
-          required
-        />
-        <Button variant="contained" color="primary" type="submit" disabled={loading || !file} fullWidth>
-          {loading ? 'Uploading...' : 'Upload'}
-        </Button>
-        {loading && <LinearProgress sx={{ mt: 2 }} />}
-      </form>
-    </Box>
-  )
+    <div style={{ padding: '20px' }}>
+      <h2>Test Upload</h2>
+      <input type="file" onChange={handleFileChange} accept="image/*" />
+      <button onClick={handleUpload} disabled={!file}>
+        Upload Test
+      </button>
+      <pre style={{ marginTop: '20px', whiteSpace: 'pre-wrap' }}>
+        {message}
+      </pre>
+    </div>
+  );
 }

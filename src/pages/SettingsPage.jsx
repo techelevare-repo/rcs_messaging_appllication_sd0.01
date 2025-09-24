@@ -1,6 +1,6 @@
-import { 
-  Box, Typography, Grid, Card, CardContent, Slider, 
-  FormControlLabel, Switch, Select, MenuItem, FormControl, 
+import {
+  Box, Typography, Grid, Card, CardContent, Slider,
+  FormControlLabel, Switch, Select, MenuItem, FormControl,
   InputLabel, TextField, Button, Divider
 } from '@mui/material';
 import { Save, RestartAlt } from '@mui/icons-material';
@@ -21,39 +21,7 @@ export default function SettingsPage() {
       </Typography>
 
       <Grid container spacing={3}>
-        {/* Appearance Settings */}
-        <Grid item xs={12} lg={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h3" gutterBottom fontWeight={600}>
-                Appearance
-              </Typography>
-              <Box sx={{ mb: 3 }}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={mode === 'dark'}
-                      onChange={toggleColorMode}
-                    />
-                  }
-                  label={
-                    <Box>
-                      <Typography variant="body1">
-                        {mode === 'dark' ? 'Dark Mode' : 'Light Mode'}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Switch between light and dark theme for better visibility
-                      </Typography>
-                    </Box>
-                  }
-                  sx={{ display: 'flex', alignItems: 'flex-start' }}
-                />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Model Configuration */}
+        {/* Model Configuration (Top Left) */}
         <Grid item xs={12} lg={8}>
           <Card>
             <CardContent>
@@ -103,7 +71,7 @@ export default function SettingsPage() {
               <Box sx={{ mb: 3 }}>
                 <FormControlLabel
                   control={
-                    <Switch 
+                    <Switch
                       checked={autoProcessing}
                       onChange={(e) => setAutoProcessing(e.target.checked)}
                     />
@@ -118,7 +86,7 @@ export default function SettingsPage() {
               <Box sx={{ mb: 3 }}>
                 <FormControlLabel
                   control={
-                    <Switch 
+                    <Switch
                       checked={emailNotifications}
                       onChange={(e) => setEmailNotifications(e.target.checked)}
                     />
@@ -150,7 +118,7 @@ export default function SettingsPage() {
           </Card>
         </Grid>
 
-        {/* System Information */}
+        {/* System Information (Top Right) */}
         <Grid item xs={12} lg={4}>
           <Card>
             <CardContent>
@@ -197,6 +165,38 @@ export default function SettingsPage() {
               >
                 Check for Updates
               </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Appearance Settings (Bottom, Full Width) */}
+        <Grid item xs={12} lg={12}>
+          <Card>
+            <CardContent>
+              <Typography variant="h3" gutterBottom fontWeight={600}>
+                Appearance
+              </Typography>
+              <Box sx={{ mb: 3 }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={mode === 'dark'}
+                      onChange={toggleColorMode}
+                    />
+                  }
+                  label={
+                    <Box>
+                      <Typography variant="body1">
+                        {mode === 'dark' ? 'Dark Mode' : 'Light Mode'}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Switch between light and dark theme for better visibility
+                      </Typography>
+                    </Box>
+                  }
+                  sx={{ display: 'flex', alignItems: 'flex-start' }}
+                />
+              </Box>
             </CardContent>
           </Card>
         </Grid>

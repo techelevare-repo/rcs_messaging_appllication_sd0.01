@@ -1,163 +1,139 @@
 
 
-// import { useState } from 'react';
-// import '../page/Login.css';
-
-// export default function Login() {
-//     const [username, setUsername] = useState('');
-//     const [password, setPassword] = useState('');
-
-//     const handleSubmit = (e) => {
-//         e.preventDefault();
-//         console.log('Login attempt:', { username, password });
-//         alert(`Logging in with Username: ${username} and Password: ${password}`);
-//         // Add your API call logic here
-//     };
-
-//     return (
-//         <div className="login-wrapper">
-//             <div className="login-container">
-//                 <h2>Login to RadiologyAI</h2>
-//                 <form onSubmit={handleSubmit}>
-//                     <input
-//                         type="text"
-//                         placeholder="Username"
-//                         value={username}
-//                         onChange={(e) => setUsername(e.target.value)}
-//                         required
-//                     />
-//                     <input
-//                         type="password"
-//                         placeholder="Password"
-//                         value={password}
-//                         onChange={(e) => setPassword(e.target.value)}
-//                         required
-//                     />
-//                     <button type="submit" >
-//                         Login
-//                     </button>
-//                 </form>
-//             </div>
-//         </div>
-//     );
-// }
-
 import { useState } from 'react';
-import '../page/Login.css';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import {
+  Box,
+  Paper,
+  TextField,
+  Button,
+  Typography,
+  Link,
+  Alert,
+  CircularProgress
+} from '@mui/material';
+import { useAuth } from '../contexts/AuthContext';
 
-export default function AuthForm() {
-  // toggle login/register
-  const [isLogin, setIsLogin] = useState(true);
+export default function Login() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // login fields
-  const [loginUsername, setLoginUsername] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
+  const { email, password } = formData;
 
-  // register fields
-  const [registerUsername, setRegisterUsername] = useState('');
-  const [registerEmail, setRegisterEmail] = useState('');
-  const [registerPassword, setRegisterPassword] = useState('');
-
-  // handle login
-  const handleLoginSubmit = (e) => {
-    e.preventDefault();
-    alert(`Login: ${loginUsername}, ${loginPassword}`);
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError(''); // Clear error when user types
   };
 
-  // handle register
-  const handleRegisterSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert(
-      `Register: ${registerUsername}, ${registerEmail}, ${registerPassword}`
-    );
-  };
+    setLoading(true);
+    setError('');
 
-  // disable if fields empty
-  const isLoginDisabled =
-    loginUsername.trim() === '' || loginPassword.trim() === '';
-  const isRegisterDisabled =
-    registerUsername.trim() === '' ||
-    registerEmail.trim() === '' ||
-    registerPassword.trim() === '';
+    try {
+      const result = await login(email, password);
+
+      if (result.success) {
+        navigate('/dashboard');
+      } else {
+        setError(result.message || 'Login failed');
+      }
+    } catch (err) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="login-wrapper">
-      <div className="login-container">
-        {isLogin ? (
-          <>
-            <h2>Login to RadiologyAI</h2>
-            <form onSubmit={handleLoginSubmit}>
-              <input
-                type="text"
-                placeholder="Username"
-                value={loginUsername}
-                onChange={(e) => setLoginUsername(e.target.value)}
-                required
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                required
-              />
-              <button type="submit" disabled={isLoginDisabled}>
-                Login
-              </button>
-            </form>
+    <Box
+      sx={{
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        bgcolor: 'background.default'
+      }}
+    >
+      <Paper
+        elevation={3}
+        sx={{
+          p: 4,
+          maxWidth: 400,
+          width: '90%'
+        }}
+      >
+        <Typography variant="h5" component="h1" gutterBottom>
+          Sign in to RadiologyAI
+        </Typography>
 
-            <div style={{ marginTop: '10px' }}>
-              <a href="#" onClick={() => alert('Forgot password flow')}>
-                Forgot Password?
-              </a>
-            </div>
-
-            <div style={{ marginTop: '10px' }}>
-              New user?{' '}
-              <a href="#" onClick={() => setIsLogin(false)}>
-                Register now
-              </a>
-            </div>
-          </>
-        ) : (
-          <>
-            <h2>Register for RadiologyAI</h2>
-            <form onSubmit={handleRegisterSubmit}>
-              <input
-                type="text"
-                placeholder="Username"
-                value={registerUsername}
-                onChange={(e) => setRegisterUsername(e.target.value)}
-                required
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                value={registerEmail}
-                onChange={(e) => setRegisterEmail(e.target.value)}
-                required
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                value={registerPassword}
-                onChange={(e) => setRegisterPassword(e.target.value)}
-                required
-              />
-              <button type="submit" disabled={isRegisterDisabled}>
-                Register
-              </button>
-            </form>
-
-            <div style={{ marginTop: '10px' }}>
-              Already have an account?{' '}
-              <a href="#" onClick={() => setIsLogin(true)}>
-                Login here
-              </a>
-            </div>
-          </>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
         )}
-      </div>
-    </div>
+
+        <form onSubmit={handleSubmit}>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            label="Email Address"
+            name="email"
+            type="email"
+            value={email}
+            onChange={handleChange}
+            autoFocus
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            label="Password"
+            name="password"
+            type="password"
+            value={password}
+            onChange={handleChange}
+          />
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{ mt: 3, mb: 2 }}
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={24} /> : 'Sign In'}
+          </Button>
+        </form>
+
+        <Typography variant="body2" align="center">
+          Don't have an account?{' '}
+          <Link
+            component="button"
+            variant="body2"
+            onClick={() => navigate('/register')}
+          >
+            Sign up
+          </Link>
+        </Typography>
+
+        <Typography variant="body2" align="center" sx={{ mt: 1 }}>
+          <Link
+            component="button"
+            variant="body2"
+            onClick={() => navigate('/forgot-password')}
+          >
+            Forgot your password?
+          </Link>
+        </Typography>
+      </Paper>
+    </Box>
   );
 }
