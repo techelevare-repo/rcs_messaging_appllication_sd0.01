@@ -24,11 +24,17 @@ export default function ForgotPassword() {
                     return;
                 }
                 setMessage('If the email exists, we sent reset instructions.');
+                setTimeout(() => {
+                    navigate('/login');
+                }, 2000);
             } else {
                 setError(res.data.message || 'Failed to request password reset');
             }
         } catch (err) {
             setMessage('If the email exists, we sent reset instructions.');
+            setTimeout(() => {
+                navigate('/login');
+            }, 2000);
         } finally {
             setLoading(false);
         }
@@ -44,6 +50,10 @@ export default function ForgotPassword() {
                     <TextField fullWidth required type="email" label="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} />
                     <Button type="submit" fullWidth variant="contained" sx={{ mt: 2 }} disabled={loading}>Request Reset</Button>
                 </form>
+                <Button onClick={() => navigate('/login')}
+                    fullWidth variant="outlined" sx={{ mt: 2 }} >
+                    Back to Login
+                </Button>
             </Paper>
         </Box>
     );
