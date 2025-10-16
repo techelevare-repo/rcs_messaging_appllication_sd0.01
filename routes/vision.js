@@ -9,6 +9,11 @@ const upload = require('../middleware/upload');
 // @access  Private
 router.post('/license-plate', auth, upload.single('image'), visionController.predictLicensePlate);
 
+// @route   POST /api/vision/gesture
+// @desc    Predict hand gesture from uploaded frame
+// @access  Private
+router.post('/gesture', auth, upload.single('image'), visionController.predictGesture);
+
 // @route   GET /api/vision/history
 // @desc    Get detection history for user
 // @access  Private

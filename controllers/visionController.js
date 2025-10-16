@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const ptLicensePlatePredictor = require('../services/ptLicensePlatePredictor');
+const gesturePredictor = require('../services/gesturePredictorPersistent');
 const Image = require('../models/Image');
 const Detection = require('../models/Detection');
 
@@ -96,6 +97,72 @@ exports.predictLicensePlate = async (req, res) => {
             message: 'Error processing license plate detection',
             error: error.message
         });
+    }
+};
+
+// Hand gesture prediction via uploaded image (single frame)
+exports.predictGesture = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No file uploaded' });
+        }
+
+        const imageBuffer = fs.readFileSync(req.file.path);
+        const predictionResult = await gesturePredictor.predict(imageBuffer);
+
+        // Save uploaded frame under gestures for audit
+        const timestamp = Date.now();
+        const filename = `gesture_${timestamp}_${req.file.originalname}`;
+        const gesturesDir = path.join(__dirname, '..', 'uploads', 'gestures');
+        if (!fs.existsSync(gesturesDir)) {
+            fs.mkdirSync(gesturesDir, { recursive: true });
+        }
+        const uploadPath = path.join(gesturesDir, filename);
+        fs.copyFileSync(req.file.path, uploadPath);
+        fs.unlinkSync(req.file.path);
+
+        // Save image to DB so detection can reference it
+        const savedImage = await new Image({
+            userId: req.user.id,
+            filename: filename,
+            originalName: req.file.originalname,
+            path: uploadPath,
+            mimetype: req.file.mimetype,
+            size: req.file.size,
+            modelType: 'hand-gesture-recognition'
+        }).save();
+
+        const detectionDoc = await Detection.create({
+            userId: req.user.id,
+            modelType: 'hand-gesture-recognition',
+            imageId: savedImage._id,
+            result: predictionResult.prediction,
+            confidence: predictionResult.confidence,
+            boundingBoxes: predictionResult.boundingBoxes,
+            additionalData: {
+                gestureLabel: predictionResult.gestureLabel
+            },
+            processingTime: predictionResult.processingTime
+        });
+
+        res.json({
+            success: true,
+            detection: {
+                id: detectionDoc._id,
+                result: detectionDoc.result,
+                confidence: detectionDoc.confidence,
+                boundingBoxes: detectionDoc.boundingBoxes,
+                gestureLabel: predictionResult.gestureLabel,
+                imageUrl: `/uploads/gestures/${filename}`,
+                processingTime: detectionDoc.processingTime
+            }
+        });
+    } catch (error) {
+        console.error('Gesture prediction error:', error);
+        if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+        res.status(500).json({ success: false, message: 'Error processing gesture detection', error: error.message });
     }
 };
 

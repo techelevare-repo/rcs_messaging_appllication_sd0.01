@@ -36,6 +36,7 @@ const dirs = [
     path.join(__dirname, 'uploads'),
     path.join(__dirname, 'results'),
     path.join(__dirname, 'uploads', 'license-plates'),
+    path.join(__dirname, 'uploads', 'gestures'),
     path.join(__dirname, 'uploads', 'temp'),
 ];
 dirs.forEach(dir => {
@@ -59,9 +60,26 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Vision Backend Server running on port ${PORT}`);
     console.log(`API Documentation available at: http://localhost:${PORT}/api-docs.md`);
+    // Preload persistent gesture worker so the model is ready
+    try {
+        const workerScript = require('path').resolve(__dirname, 'services', 'gestureWorker.py');
+        const tfPythonPath = require('path').resolve(__dirname, '..', 'tf', 'Scripts', 'python.exe');
+        const modelPath = require('path').resolve(__dirname, '..', 'model.keras');
+        const lePath = require('path').resolve(__dirname, '..', 'label_encoder.pkl');
+        if (require('fs').existsSync(workerScript) && require('fs').existsSync(modelPath) && require('fs').existsSync(lePath)) {
+            const { spawn } = require('child_process');
+            const warm = spawn(tfPythonPath, [workerScript, modelPath, lePath], { stdio: 'ignore' });
+            setTimeout(() => {
+                try { warm.kill('SIGTERM'); } catch { }
+                console.log('Gesture worker preloaded at startup');
+            }, 8000);
+        }
+    } catch (e) {
+        console.log('Gesture worker preload skipped:', e?.message || e);
+    }
 }).on('error', (err) => {
     console.error('Server error:', err);
 });

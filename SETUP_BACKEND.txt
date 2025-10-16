@@ -1,0 +1,40 @@
+Windows setup for Vision Backend (with TensorFlow/MediaPipe)
+
+Prerequisites
+- Install Python 3.11.9 (64-bit) and ensure python.exe is on PATH
+- Install Node.js 18+ (for running the backend)
+- Ensure MongoDB is running locally (mongodb://localhost:27017)
+
+Create the dedicated virtual environment (tf)
+1) Open PowerShell in project root: D:\Techelevare
+2) Create venv:
+   python -m venv tf
+3) Upgrade pip inside the venv:
+   .\tf\Scripts\python.exe -m pip install --upgrade pip
+4) Install exact Python dependencies:
+   .\tf\Scripts\pip.exe install tensorflow==2.18.0 numpy opencv-python mediapipe protobuf==3.20.1 scikit-learn
+
+Verify dependencies (optional)
+   .\tf\Scripts\python.exe -c "import tensorflow, cv2, mediapipe, numpy; print('TF:', tensorflow.__version__)"
+
+Model files (expected locations)
+- D:\Techelevare\model.keras
+- D:\Techelevare\label_encoder.pkl
+
+Backend environment variables (optional)
+Create vision-backend\.env with:
+  MONGO_URI=mongodb://localhost:27017/vision
+  JWT_SECRET=vision-app-secret-key
+  PORT=5001
+
+Install and run the backend
+1) From D:\Techelevare\vision-backend
+   npm install
+2) Start the server
+   npm start
+
+Notes
+- The backend is configured to use the TF venv at D:\Techelevare\tf\Scripts\python.exe for the gesture worker.
+- First run may take several seconds while the model loads.
+- If PowerShell blocks scripts, run once as Administrator:
+   Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
